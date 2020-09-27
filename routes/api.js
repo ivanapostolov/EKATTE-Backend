@@ -2,67 +2,87 @@ const EKATTEDatabase = require('../database-tools/EKATTEDatabase');
 const express = require('express');
 const router = express.Router();
 
-router.get('/all-towns', function(request, response) {
-    EKATTEDatabase.selectAllTowns().then(res => {
-        response.send({ result: res.rows });
+//Utility functions
+
+const handleDBResponse = (promise, response) => {
+    promise.then(res => {
+        response.status(200).json({ result: res.rows });
     }).catch(err => {
-        response.send({ error: err });
+        console.log(err);
+        response.status(500).send({ error: "Internal server error" });
     });
+}
+
+const isUndefined = (value) => {
+    return typeof value === 'undefined';
+}
+
+//Router functions
+
+//http://localhost:3000/api/all-towns
+router.get('/all-towns', (request, response) => {
+    handleDBResponse(EKATTEDatabase.selectAllTowns(), response);
 });
 
-router.get('/get-municipality/:municipality_code', (request, response) => {
+//http://localhost:3000/api/get-municipality-by-code/
+router.get('/get-municipality-by-code/:municipality_code', (request, response) => {
     const code = request.params.municipality_code;
 
-    if (typeof code !== 'undefined') {
-        EKATTEDatabase.selectByMunicipalityCode(code.toUpperCase()).then(res => {
-            response.send({ result: res.rows });
-        }).catch(err => {
-            response.send({ error: err.error });
-        });
+    const regex = /^[A-Za-z]{3}[0-9]{2}/;
+
+    if (!isUndefined(code) && regex.test(code)) {
+        if (regex.exec(code)[0] === code) {
+            handleDBResponse(EKATTEDatabase.selectByMunicipalityCode(code.toUpperCase()), response);
+        } else {
+            response.status(400).send({ error: "Bad Request" });
+        }
     } else {
-        response.send({ error: "Incorrect parameter" });
+        response.status(400).send({ error: "Bad Request" });
     }
 });
 
-router.get('/get-province/:province_code', (request, response) => {
+//http://localhost:3000/api/get-province-by-code/
+router.get('/get-province-by-code/:province_code', (request, response) => {
     const code = request.params.province_code;
 
-    if (typeof code !== 'undefined') {
-        EKATTEDatabase.selectByProvinceCode(code.toUpperCase()).then(res => {
-            response.send({ result: res.rows });
-        }).catch(err => {
-            response.send({ error: err.error });
-        });
+    const regex = /^[A-Za-z]{3}/;
+
+    if (!isUndefined(code) && regex.test(code)) {
+        if (regex.exec(code)[0] === code) {
+            handleDBResponse(EKATTEDatabase.selectByProvinceCode(code.toUpperCase()), response);
+        } else {
+            response.status(400).send({ error: "Bad Request" });
+        }
     } else {
-        response.send({ error: "Incorrect parameter" });
+        response.status(400).send({ error: "Bad Request" });
     }
 });
 
+//http://localhost:3000/api/get-town-by-ucattu/
 router.get('/get-town-by-ucattu/:ucattu_code', (request, response) => {
     const code = request.params.ucattu_code;
 
-    if (typeof code !== 'undefined') {
-        EKATTEDatabase.selectByUcattuCode(code.toUpperCase()).then(res => {
-            response.send({ result: res.rows });
-        }).catch(err => {
-            response.send({ error: err.error });
-        });
+    const regex = /^[0-9]{1,5}/;
+
+    if (!isUndefined(code) && regex.test(code)) {
+        if (regex.exec(code)[0] === code) {
+            handleDBResponse(EKATTEDatabase.selectByUcattuCode(code.toUpperCase()), response);
+        } else {
+            response.status(400).send({ error: "Bad Request" });
+        }
     } else {
-        response.send({ error: "Incorrect parameter" });
+        response.status(400).send({ error: "Bad Request" });
     }
 });
 
+//http://localhost:3000/api/get-town-by-name/
 router.get('/get-town-by-name/:name', (request, response) => {
     const name = request.params.name;
 
-    if (typeof name !== 'undefined') {
-        EKATTEDatabase.selectTownByName(name).then(res => {
-            response.send({ result: res.rows });
-        }).catch(err => {
-            response.send({ error: err.error });
-        });
+    if (!isUndefined(name)) {
+        handleDBResponse(EKATTEDatabase.selectTownByName(name), response);
     } else {
-        response.send({ error: "Incorrect parameter" });
+        response.status(400).send({ error: "Bad Request" });
     }
 });
 

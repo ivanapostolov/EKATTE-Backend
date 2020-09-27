@@ -7,6 +7,9 @@ const apiRouter = require('./routes/api');
 
 const app = express();
 
+//Intercept requests to a static file to avoid 304 Not Modified
+app.disable('etag');
+
 app.use('/api', apiRouter);
 
 FilesProvider.prepareFiles().then(res => {
