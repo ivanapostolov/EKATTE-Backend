@@ -10,20 +10,27 @@ const app = express();
 //Intercept requests to a static file to avoid 304 Not Modified
 app.disable('etag');
 
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
+    next();
+});
+
 app.use('/api', apiRouter);
 
 FilesProvider.prepareFiles().then(res => {
     console.log(res);
 
     EKATTEDatabase.drop().then(res => {
-        console.log(res);
+        //console.log(res);
     }).catch(err => {
-        console.log(err);
+        //console.log(err);
     }).finally(() => {
         EKATTEDatabase.create().then(res => {
-            console.log(res);
+            //console.log(res);
         }).catch(_err => {
-            console.log(err);
+            //console.log(err);
         }).finally(() => {
             EKATTEDatabase.insert().then(res => {
                 console.log(res);

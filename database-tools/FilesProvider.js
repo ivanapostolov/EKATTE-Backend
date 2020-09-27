@@ -35,7 +35,7 @@ class FilesProvider {
             } catch {
                 Logger.log("Error", "Error occurred while trying to decompress file");
 
-                reject({ err: "Error occurred while trying to decompress file" })
+                reject({ err: "Error occurred while trying to decompress file" });
             }
         });
     }

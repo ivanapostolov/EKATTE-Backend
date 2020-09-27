@@ -9,6 +9,7 @@ const handleDBResponse = (promise, response) => {
         response.status(200).json({ result: res.rows });
     }).catch(err => {
         console.log(err);
+
         response.status(500).send({ error: "Internal server error" });
     });
 }
@@ -22,6 +23,11 @@ const isUndefined = (value) => {
 //http://localhost:3000/api/all-towns
 router.get('/all-towns', (request, response) => {
     handleDBResponse(EKATTEDatabase.selectAllTowns(), response);
+});
+
+//http://localhost:3000/api/all-distinct-town-names
+router.get('/all-distinct-town-names', (request, response) => {
+    handleDBResponse(EKATTEDatabase.selectAllDistinctTownNames(), response);
 });
 
 //http://localhost:3000/api/get-municipality-by-code/

@@ -25,8 +25,9 @@ const executeQuery = (query) => {
 
 class EKATTEDatabase {
     static create() {
-        const sql = `CREATE TABLE Provinces(code VARCHAR(3) NOT NULL UNIQUE, city_ucattu_code INT NOT NULL, name VARCHAR(255) NOT NULL); 
-        CREATE TABLE Municipalities(code VARCHAR(5) NOT NULL UNIQUE, province_code VARCHAR(3) NOT NULL, city_ucattu_code INT NOT NULL, name VARCHAR(255) NOT NULL); 
+        const sql = `
+        CREATE TABLE Provinces(id VARCHAR(3) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL); 
+        CREATE TABLE Municipalities(id VARCHAR(2) NOT NULL, province_code VARCHAR(3) NOT NULL, name VARCHAR(255) NOT NULL); 
         CREATE TABLE Towns(ucattu_code INT NOT NULL UNIQUE, municipality_code VARCHAR(5) NOT NULL, name VARCHAR(255) NOT NULL, kind INT NOT NULL)`;
 
         return executeQuery(sql);
@@ -43,27 +44,23 @@ class EKATTEDatabase {
                 const municipalities = xlsx.parse(municipalitiesPath)[0].data;
                 const towns = xlsx.parse(townsPath)[0].data;
 
-                let sql;
+                const provincesSQL = "INSERT INTO Provinces VALUES($1, $2);";
+                const municipalitiesSQL = "INSERT INTO Municipalities VALUES($1, $2, $3);";
+                const townsSQL = "INSERT INTO Towns VALUES($1, $2, $3, $4);";
 
                 for (let i = 1; i < provinces.length; i++) {
-                    sql = "INSERT INTO Provinces VALUES('" + provinces[i][0] + "', " + provinces[i][1] + ", '" + provinces[i][2] + "');";
-
-                    executeQuery(sql).catch(err => { reject(err) });
+                    executeQuery({ text: provincesSQL, values: [provinces[i][0], provinces[i][2]] }).catch(err => { reject(err) });
                 }
 
                 for (let i = 1; i < municipalities.length; i++) {
-                    sql = "INSERT INTO Municipalities VALUES('" + municipalities[i][0] + "', '" + municipalities[i][0].substring(0, 3) + "', " + municipalities[i][1] + ", '" + municipalities[i][2] + "');";
-
-                    executeQuery(sql).catch(err => { reject(err) });
+                    executeQuery({ text: municipalitiesSQL, values: [municipalities[i][0].slice(-2), municipalities[i][0].substring(0, 3), municipalities[i][2]] }).catch(err => { reject(err) });
                 }
 
                 for (let i = 2; i < towns.length; i++) {
-                    sql = "INSERT INTO Towns VALUES(" + towns[i][0] + ", '" + towns[i][4] + "', '" + towns[i][2] + "', " + towns[i][6] + ");"
-
-                    executeQuery(sql).catch(err => { reject(err) });
+                    executeQuery({ text: townsSQL, values: [towns[i][0], towns[i][4], towns[i][2], towns[i][6]] }).catch(err => { reject(err) });
                 }
 
-                resolve({ result: "success" })
+                resolve({ result: "All records inserted successfully" });
             } catch {
                 reject({ error: "Database Insert Error" });
             }
@@ -82,6 +79,12 @@ class EKATTEDatabase {
         return executeQuery(sql);
     }
 
+    static selectAllDistinctTownNames() {
+        const sql = "SELECT DISTINCT name FROM Towns";
+
+        return executeQuery(sql);
+    }
+
     static selectAllTowns() {
         const sql = "SELECT * FROM Towns";
 
@@ -89,27 +92,58 @@ class EKATTEDatabase {
     }
 
     static selectByMunicipalityCode(code) {
-        const sql = "SELECT * FROM Municipalities WHERE code = '" + code + "'";
+        const sql = "SELECT * FROM Municipalities WHERE id = $1 AND province_code = $2";
 
-        return executeQuery(sql);
+        return executeQuery({ text: sql, values: [code.slice(-2), code.substring(0, 3)] });
     }
 
     static selectByProvinceCode(code) {
-        const sql = "SELECT * FROM Provinces WHERE code = '" + code + "'";
+        const sql = "SELECT * FROM Provinces WHERE id = $1";
 
-        return executeQuery(sql);
+        return executeQuery({ text: sql, values: [code] });
     }
 
     static selectByUcattuCode(code) {
-        const sql = "SELECT * FROM Towns WHERE ucattu_code = '" + code + "'";
+        const sql = "SELECT * FROM Towns WHERE ucattu_code = $1";
 
-        return executeQuery(sql);
+        return executeQuery({ text: sql, values: [code] });
     }
 
     static selectTownByName(name) {
-        const sql = "SELECT * FROM Towns WHERE name = '" + name + "'";
+        const sql = "SELECT * FROM Towns WHERE name = $1";
 
-        return executeQuery(sql);
+        return executeQuery({ text: sql, values: [name] });
+    }
+
+    static getProvincesCount() {
+        return new Promise((resolve, reject) => {
+            executeQuery("SELECT COUNT(id) FROM Provinces WHERE id IS NOT NULL").then(res => {
+                resolve(parseInt(res.rows[0].count));
+            }).catch(err => {
+                reject(err.code);
+                //Code 42P01 means relation "provinces" does not exist
+            });
+        });
+    }
+
+    static getMunicipalitiesCount() {
+        return new Promise((resolve, reject) => {
+            executeQuery("SELECT COUNT(id) FROM Municipalities WHERE id IS NOT NULL").then(res => {
+                resolve(parseInt(res.rows[0].count));
+            }).catch(err => {
+                reject(err.code);
+            });
+        });
+    }
+
+    static getTownsCount() {
+        return new Promise((resolve, reject) => {
+            executeQuery("SELECT COUNT(ucattu_code) FROM Towns WHERE ucattu_code IS NOT NULL").then(res => {
+                resolve(parseInt(res.rows[0].count));
+            }).catch(err => {
+                reject(err.code);
+            });
+        });
     }
 }
 
