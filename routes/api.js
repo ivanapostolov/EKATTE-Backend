@@ -18,7 +18,6 @@ const isUndefined = (value) => {
     return typeof value === 'undefined';
 }
 
-//Router functions
 
 //http://localhost:3000/api/all-towns
 router.get('/all-towns', (request, response) => {
@@ -90,6 +89,42 @@ router.get('/get-town-by-name/:name', (request, response) => {
     } else {
         response.status(400).send({ error: "Bad Request" });
     }
+});
+
+//http://localhost:3000/api/get-towns-count/
+router.get('/get-towns-count/', (request, response) => {
+    EKATTEDatabase.getTownsCount().then(result => {
+        response.status(200).json({ result: result });
+    }).catch(err => {
+        if (err === "42P01") {
+            console.log({ err: "Table Towns is missing" });
+        }
+        response.status(500).send({ error: "Internal server error" });
+    });
+});
+
+//http://localhost:3000/api/get-municipalities-count/
+router.get('/get-municipalities-count/', (request, response) => {
+    EKATTEDatabase.getMunicipalitiesCount().then(result => {
+        response.status(200).json({ result: result });
+    }).catch(err => {
+        if (err === "42P01") {
+            console.log({ err: "Table Municipalities is missing" });
+        }
+        response.status(500).send({ error: "Internal server error" });
+    });
+});
+
+//http://localhost:3000/api/get-provinces-count/
+router.get('/get-provinces-count/', (request, response) => {
+    EKATTEDatabase.getProvincesCount().then(result => {
+        response.status(200).json({ result: result });
+    }).catch(err => {
+        if (err === "42P01") {
+            console.log({ err: "Table Provinces is missing" });
+        }
+        response.status(500).send({ error: "Internal server error" });
+    });
 });
 
 module.exports = router;

@@ -79,6 +79,24 @@ class EKATTEDatabase {
         return executeQuery(sql);
     }
 
+    static async doesTablesExist() {
+        const sql = "SELECT to_regclass('Towns'); SELECT to_regclass('Provinces'); SELECT to_regclass('Municipalities');";
+        try {
+            const results = await executeQuery(sql);
+
+            for (let i = 0; i < results.length; i++) {
+                if (!results[i].rows[0].to_regclass) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch {
+            console.log("does exist error");
+            return false;
+        }
+    }
+
     static selectAllDistinctTownNames() {
         const sql = "SELECT DISTINCT name FROM Towns";
 

@@ -19,29 +19,30 @@ app.use((req, res, next) => {
 
 app.use('/api', apiRouter);
 
-FilesProvider.prepareFiles().then(res => {
-    console.log(res);
+const initializeDatabase = async() => {
+    try {
+        await FilesProvider.prepareFiles();
+        console.log({ res: "Files prepared successfully" });
+        await EKATTEDatabase.create();
+        console.log({ res: "Tables created" });
+        await EKATTEDatabase.insert();
+        console.log({ res: "Tables inserted" });
+    } catch {
+        console.log("Initializing error!");
+    }
+}
 
-    EKATTEDatabase.drop().then(res => {
-        //console.log(res);
-    }).catch(err => {
-        //console.log(err);
-    }).finally(() => {
-        EKATTEDatabase.create().then(res => {
-            //console.log(res);
-        }).catch(_err => {
-            //console.log(err);
-        }).finally(() => {
-            EKATTEDatabase.insert().then(res => {
-                console.log(res);
-            }).catch(err => {
-                console.log(err);
-            });
-        });
-    });
-}).catch(err => {
-    console.log(err);
-});
+const initializeServer = async() => {
+    if (await EKATTEDatabase.doesTablesExist()) {
+        console.log({ res: "Databse already exists" });
+    } else {
+        console.log({ res: "Databse does NOT exist yet" });
+
+        initializeDatabase();
+    }
+}
+
+initializeServer();
 
 const port = process.env.PORT || 3000;
 
