@@ -18,7 +18,7 @@ const executeQuery = (query) => {
                 reject(err);
             }
         });
-    })
+    });
 }
 
 //Unified Classifier of the Administrative-Territorial and Territorial Units (UCATTU)
@@ -92,7 +92,8 @@ class EKATTEDatabase {
 
             return true;
         } catch {
-            console.log("does exist error");
+            console.log({ err: "Error occurred while trying to check if tables exist" });
+
             return false;
         }
     }
